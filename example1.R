@@ -1,0 +1,23 @@
+require(XML)
+require(tm)
+require(wordcloud)
+require(RColorBrewer)
+u = "http://cran.r-project.org/web/packages/available_packages_by_date.html"
+t = readHTMLTable(u)[[1]]
+ap.corpus <- Corpus(DataframeSource(data.frame(as.character(t[,3]))))
+ap.corpus <- tm_map(ap.corpus, removePunctuation)
+ap.corpus <- tm_map(ap.corpus, content_transformer(tolower))
+ap.corpus <- tm_map(ap.corpus, function(x) removeWords(x, stopwords("english")))
+ap.corpus <- Corpus(VectorSource(ap.corpus))
+ap.tdm <- TermDocumentMatrix(ap.corpus)
+ap.m <- as.matrix(ap.tdm)
+ap.v <- sort(rowSums(ap.m),decreasing=TRUE)
+ap.d <- data.frame(word = names(ap.v),freq=ap.v)
+table(ap.d$freq)
+pal2 <- brewer.pal(8,"Dark2")
+setwd("~/workspace/wordcloud/")
+#png("wordcloud_packages.png", width=800,height=800)
+pdf(file = "wordcloud_pdf.pdf", width=100,height=100)
+wordcloud(ap.d$word,ap.d$freq, scale=c(8,.2),min.freq=3,
+          max.words=Inf, random.order=FALSE, rot.per=0, colors=pal2)
+dev.off()
